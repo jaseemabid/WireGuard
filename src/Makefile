@@ -36,7 +36,7 @@ module: version.h
 	@$(MAKE) -C $(KERNELDIR) M=$(PWD) modules
 
 module-debug: version.h
-	@$(MAKE) -C $(KERNELDIR) M=$(PWD) V=1 CONFIG_WIREGUARD_DEBUG=y modules
+	@$(MAKE) -C $(KERNELDIR) M=$(PWD) CONFIG_WIREGUARD_DEBUG=y modules
 
 clean:
 	@$(MAKE) -C $(KERNELDIR) M=$(PWD) clean
