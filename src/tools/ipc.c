@@ -785,6 +785,15 @@ static int parse_peer(const struct nlattr *attr, void *data)
 		break;
 	case WGPEER_A_ALLOWEDIPS:
 		return mnl_attr_parse_nested(attr, parse_allowedips, peer);
+		break;
+	case WGPEER_A_PROTOCOL_VERSION:
+		// Nothing needs to be done for this yet, but adding the branch
+		// here for completeness and documentation. This message is
+		// received by user space already.
+		break;
+	default:
+		// Unknown peer attribute, this probably should log an error.
+		break;
 	}
 
 	return MNL_CB_OK;
