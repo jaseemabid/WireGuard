@@ -246,6 +246,8 @@ static void pretty_print(struct wgdevice *device)
 		}
 		if (peer->persistent_keepalive_interval)
 			terminal_printf("  " TERMINAL_BOLD "persistent keepalive" TERMINAL_RESET ": %s\n", every(peer->persistent_keepalive_interval));
+		if (peer->flags & WGPEER_HAS_NAME)
+			terminal_printf("  " TERMINAL_BOLD "name" TERMINAL_RESET ": %s\n", peer->name);
 		if (peer->next_peer)
 			terminal_printf("\n");
 	}

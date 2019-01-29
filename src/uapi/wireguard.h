@@ -33,6 +33,7 @@
  *        0: NLA_NESTED
  *            WGPEER_A_PUBLIC_KEY: len WG_KEY_LEN
  *            WGPEER_A_PRESHARED_KEY: len WG_KEY_LEN
+ *            WGPEER_A_NAME: NLA_NUL_STRING, maxlen WG_NAME_LEN - 1
  *            WGPEER_A_ENDPOINT: struct sockaddr_in or struct sockaddr_in6
  *            WGPEER_A_PERSISTENT_KEEPALIVE_INTERVAL: NLA_U16
  *            WGPEER_A_LAST_HANDSHAKE_TIME: struct __kernel_timespec
@@ -92,6 +93,7 @@
  *                            if all current allowed IPs of this peer should be
  *                            removed prior to adding the list below.
  *            WGPEER_A_PRESHARED_KEY: len WG_KEY_LEN, all zeros to remove
+ *            WGPEER_A_NAME: len WG_NAME_LEN, NULL pointer to remove
  *            WGPEER_A_ENDPOINT: struct sockaddr_in or struct sockaddr_in6
  *            WGPEER_A_PERSISTENT_KEEPALIVE_INTERVAL: NLA_U16, 0 to disable
  *            WGPEER_A_ALLOWEDIPS: NLA_NESTED
@@ -133,6 +135,7 @@
 #define WG_GENL_VERSION 1
 
 #define WG_KEY_LEN 32
+#define WG_NAME_LEN 128
 
 enum wg_cmd {
 	WG_CMD_GET_DEVICE,
@@ -166,6 +169,7 @@ enum wgpeer_attribute {
 	WGPEER_A_UNSPEC,
 	WGPEER_A_PUBLIC_KEY,
 	WGPEER_A_PRESHARED_KEY,
+	WGPEER_A_NAME,
 	WGPEER_A_FLAGS,
 	WGPEER_A_ENDPOINT,
 	WGPEER_A_PERSISTENT_KEEPALIVE_INTERVAL,

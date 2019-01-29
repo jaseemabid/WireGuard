@@ -594,6 +594,8 @@ again:
 			goto toobig_peers;
 		if (!mnl_attr_put_check(nlh, SOCKET_BUFFER_SIZE, WGPEER_A_PUBLIC_KEY, sizeof(peer->public_key), peer->public_key))
 			goto toobig_peers;
+		if (!mnl_attr_put_check(nlh, SOCKET_BUFFER_SIZE, WGPEER_A_NAME, sizeof(peer->name), peer->name))
+			goto toobig_peers;
 		if (peer->flags & WGPEER_REMOVE_ME)
 			flags |= WGPEER_F_REMOVE_ME;
 		if (!allowedip) {
@@ -753,6 +755,15 @@ static int parse_peer(const struct nlattr *attr, void *data)
 			memcpy(peer->preshared_key, mnl_attr_get_payload(attr), sizeof(peer->preshared_key));
 			if (!key_is_zero(peer->preshared_key))
 				peer->flags |= WGPEER_HAS_PRESHARED_KEY;
+		}
+		break;
+	case WGPEER_A_NAME:
+		// NOTE: What validations should a client do for data that comes
+		// from the kernel? Can this be blindly trusted?
+		if (mnl_attr_get_payload_len(attr) != 0) {
+			memcpy(peer->name, mnl_attr_get_payload(attr), sizeof(peer->name));
+			if (*peer->name != '\0')
+				peer->flags |= WGPEER_HAS_NAME;
 		}
 		break;
 	case WGPEER_A_ENDPOINT: {

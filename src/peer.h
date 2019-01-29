@@ -40,6 +40,9 @@ struct wg_peer {
 	struct sk_buff_head staged_packet_queue;
 	int serial_work_cpu;
 	struct noise_keypairs keypairs;
+	u8 name[128];  // NOTE: This is defined in wireguard.h as WG_NAME_LEN,
+		       // but not imported here. Is this duplication OK or
+		       // should that be defined differently?
 	struct endpoint endpoint;
 	struct dst_cache endpoint_cache;
 	rwlock_t endpoint_lock;

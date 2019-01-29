@@ -104,6 +104,18 @@ err:
 	return false;
 }
 
+static inline bool parse_name(uint8_t name[static WG_NAME_LEN], uint32_t *flags,  const char *value)
+{
+	if (strlen(value) >= WG_NAME_LEN) {
+		fprintf(stderr, "Name is too long, must be less than %d chars: `%s'\n", WG_NAME_LEN, value);
+		return false;
+	}
+
+	*flags |= WGPEER_HAS_NAME;
+	memcpy(name, value, strlen(value));
+	return true;
+}
+
 static inline bool parse_key(uint8_t key[static WG_KEY_LEN], const char *value)
 {
 	if (!key_from_base64(key, value)) {
@@ -407,6 +419,8 @@ static bool process_line(struct config_ctx *ctx, const char *line)
 			ret = parse_key(ctx->last_peer->public_key, value);
 			if (ret)
 				ctx->last_peer->flags |= WGPEER_HAS_PUBLIC_KEY;
+		} else if (key_match("Name")) {
+			ret = parse_name(ctx->last_peer->name, &ctx->last_peer->flags, value);
 		} else if (key_match("AllowedIPs"))
 			ret = parse_allowedips(ctx->last_peer, &ctx->last_allowedip, value);
 		else if (key_match("PersistentKeepalive"))
@@ -577,6 +591,11 @@ struct wgdevice *config_read_cmd(char *argv[], int argc)
 			argc -= 2;
 		} else if (!strcmp(argv[0], "persistent-keepalive") && argc >= 2 && peer) {
 			if (!parse_persistent_keepalive(&peer->persistent_keepalive_interval, &peer->flags, argv[1]))
+				goto error;
+			argv += 2;
+			argc -= 2;
+		} else if (!strcmp(argv[0], "name") && argc >= 2 && peer) {
+			if (!parse_name(peer->name, &peer->flags, argv[1]))
 				goto error;
 			argv += 2;
 			argc -= 2;

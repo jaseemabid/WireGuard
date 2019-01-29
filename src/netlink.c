@@ -30,6 +30,7 @@ static const struct nla_policy device_policy[WGDEVICE_A_MAX + 1] = {
 static const struct nla_policy peer_policy[WGPEER_A_MAX + 1] = {
 	[WGPEER_A_PUBLIC_KEY]				= { .len = NOISE_PUBLIC_KEY_LEN },
 	[WGPEER_A_PRESHARED_KEY]			= { .len = NOISE_SYMMETRIC_KEY_LEN },
+	[WGPEER_A_NAME]					= { .type = NLA_NUL_STRING, .len = WG_NAME_LEN - 1},
 	[WGPEER_A_FLAGS]				= { .type = NLA_U32 },
 	[WGPEER_A_ENDPOINT]				= { .len = sizeof(struct sockaddr) },
 	[WGPEER_A_PERSISTENT_KEEPALIVE_INTERVAL]	= { .type = NLA_U16 },
@@ -122,6 +123,7 @@ static int get_peer(struct wg_peer *peer, struct allowedips_cursor *rt_cursor,
 
 		if (nla_put(skb, WGPEER_A_LAST_HANDSHAKE_TIME,
 			    sizeof(last_handshake), &last_handshake) ||
+		    nla_put(skb, WGPEER_A_NAME, sizeof(peer->name), &peer->name) ||
 		    nla_put_u16(skb, WGPEER_A_PERSISTENT_KEEPALIVE_INTERVAL,
 				peer->persistent_keepalive_interval) ||
 		    nla_put_u64_64bit(skb, WGPEER_A_TX_BYTES, peer->tx_bytes,
@@ -345,7 +347,7 @@ static int set_allowedip(struct wg_peer *peer, struct nlattr **attrs)
 
 static int set_peer(struct wg_device *wg, struct nlattr **attrs)
 {
-	u8 *public_key = NULL, *preshared_key = NULL;
+	u8 *public_key = NULL, *preshared_key = NULL, *name = NULL;
 	struct wg_peer *peer = NULL;
 	u32 flags = 0;
 	int ret;
@@ -427,6 +429,21 @@ static int set_peer(struct wg_device *wg, struct nlattr **attrs)
 			memcpy(&endpoint.addr, addr, len);
 			wg_socket_set_peer_endpoint(peer, &endpoint);
 		}
+	}
+
+	if (attrs[WGPEER_A_NAME]) {
+		// NOTE: What kind of validation is required before copying the
+		// data to kernel? I don't want this line to become a CVE.
+		if (attrs[WGPEER_A_NAME] &&
+		    nla_len(attrs[WGPEER_A_NAME]) <= WG_NAME_LEN) {
+			name = nla_data(attrs[WGPEER_A_NAME]);
+			// Clear previous name before updating, wont work for renaming
+			// to a shorter name otherwise.
+			memset(&peer->name, 0, WG_NAME_LEN);
+			memcpy(&peer->name, name, strlen(name));
+		}
+		else
+			goto out;
 	}
 
 	if (flags & WGPEER_F_REPLACE_ALLOWEDIPS)
